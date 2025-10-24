@@ -215,26 +215,20 @@ def main():
     st.markdown("<hr style='border:0; height:2px; background:#e3f2fd; margin-bottom:24px;'>", unsafe_allow_html=True)
 
     # 브라우저 GPS 위치 감지 (Streamlit JS 컴포넌트 활용)
-    import streamlit.components.v1 as components
-    if 'coords' not in st.session_state:
-        st.session_state['coords'] = None
+    from streamlit_js_eval import streamlit_js_eval
+    coords = None
     get_location = st.button('내 위치')
     if get_location:
-        components.html(
-            """
-            <script>
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    const coords = pos.coords.latitude + ',' + pos.coords.longitude;
-                    window.parent.postMessage(coords, '*');
-                }
-            );
-            </script>
-            """,
-            height=0,
-        )
-        st.info('위치 권한을 허용하면 내 위치의 지역명이 안내됩니다.')
-    if st.session_state['coords']:
+        js = streamlit_js_eval(js_expressions="geolocation", key="get_gps")
+        if js and js['geolocation']:
+            lat = js['geolocation']['latitude']
+            lon = js['geolocation']['longitude']
+            coords = f"{lat},{lon}"
+            st.session_state['coords'] = coords
+            st.info('위치 권한을 허용하면 내 위치의 지역명이 안내됩니다.')
+        else:
+            st.error('위치 정보를 가져올 수 없습니다. 브라우저 권한을 확인하세요.')
+    if 'coords' in st.session_state and st.session_state['coords']:
         lat, lon = st.session_state['coords'].split(',')
         # Reverse geocoding으로 지역명 안내 (Nominatim 사용)
         import requests
