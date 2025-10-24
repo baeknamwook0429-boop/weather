@@ -215,11 +215,10 @@ def main():
     st.markdown("<hr style='border:0; height:2px; background:#e3f2fd; margin-bottom:24px;'>", unsafe_allow_html=True)
 
     # 브라우저 GPS 위치 감지 (Streamlit JS 컴포넌트 활용)
-    st.markdown("<b>내 위치(GPS) 기반 지역명 및 날씨 자동 안내</b>")
     import streamlit.components.v1 as components
     if 'coords' not in st.session_state:
         st.session_state['coords'] = None
-    get_location = st.button('내 위치 자동 감지')
+    get_location = st.button('내 위치')
     if get_location:
         components.html(
             """
@@ -234,7 +233,7 @@ def main():
             """,
             height=0,
         )
-        st.info('위치 권한을 허용하면 내 위치가 자동으로 안내됩니다.')
+        st.info('위치 권한을 허용하면 내 위치의 지역명이 안내됩니다.')
     if st.session_state['coords']:
         lat, lon = st.session_state['coords'].split(',')
         # Reverse geocoding으로 지역명 안내 (Nominatim 사용)
@@ -246,27 +245,6 @@ def main():
             address = geo_data.get('address', {})
             region = address.get('city') or address.get('town') or address.get('village') or address.get('state') or '알 수 없음'
             st.success(f'내 위치 지역명: {region}')
-            # 해당 위치의 날씨 정보 표시
-            weather_url = f'https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_KEY}&lang=kr&units=metric'
-            response = requests.get(weather_url)
-            if response.status_code == 200:
-                data = response.json()
-                desc = desc_map.get(data['weather'][0]['description'], data['weather'][0]['description'])
-                emoji = emoji_map.get(desc, '')
-                st.markdown(f"<h2 style='text-align:center; color:#1976d2; margin-bottom:0;'>{region}의 현재 날씨 {emoji}</h2>", unsafe_allow_html=True)
-                st.markdown("<hr style='border:0; height:2px; background:#bbdefb; margin-bottom:18px;'>", unsafe_allow_html=True)
-                st.markdown(f"""
-                <div style='display:flex; justify-content:center;'>
-                    <div style='background:#f5f7fa; border-radius:18px; padding:28px 24px 20px 24px; margin-bottom:18px; box-shadow:0 4px 16px #b0bec5; min-width:340px; max-width:420px;'>
-                        <div style='font-size:2.2em; font-weight:bold; color:#1976d2; text-align:center; margin-bottom:8px;'>{desc} {emoji}</div>
-                        <div style='font-size:1.5em; color:#333; text-align:center; margin-bottom:6px;'>🌡️ 온도: <b>{data['main']['temp']}°C</b></div>
-                        <div style='font-size:1.2em; color:#333; text-align:center; margin-bottom:4px;'>💧 습도: <b>{data['main']['humidity']}%</b></div>
-                        <div style='font-size:1.2em; color:#333; text-align:center;'>💨 풍속: <b>{data['wind']['speed']} m/s</b></div>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.error('내 위치의 날씨 정보를 가져올 수 없습니다.')
         else:
             st.error('내 위치의 지역명을 가져올 수 없습니다.')
 
