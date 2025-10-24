@@ -1,0 +1,3 @@
+streamlit-js-eval
+requests
+pandas
