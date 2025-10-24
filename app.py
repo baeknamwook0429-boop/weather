@@ -79,11 +79,18 @@ emoji_map = {
 
 def get_weekly_weather(city, api_key):
     # 5일 예보(forecast API)만 사용
-    url = f'https://api.openweathermap.org/data/2.5/forecast?q={city}&appid={api_key}&lang=kr&units=metric'
+    # 한글 도시명일 경우 영문 도시명으로 변환
+    city_eng = city_map.get(city, city)
+    url = f'https://api.openweathermap.org/data/2.5/forecast?q={city_eng}&appid={api_key}&lang=kr&units=metric'
     res = requests.get(url)
     if res.status_code == 200:
         return res.json()
-    return None
+    # 실패 시 status_code와 에러 메시지 반환
+    try:
+        err = res.json()
+    except Exception:
+        err = res.text
+    return {'error': True, 'status_code': res.status_code, 'message': err}
 
 def get_weather(city, api_key):
     url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&lang=kr&units=metric'
@@ -241,7 +248,17 @@ def main():
             kor_city = eng_to_kor.get(result_city, result_city)
             used_near_city = True
         if data:
-            weekly = get_weekly_weather(result_city if used_near_city else city, API_KEY)
+            # 인근 도시 안내 시 5일 예보도 result_city(인근 도시)로 가져옴
+            weekly_city = result_city
+            weekly = get_weekly_weather(weekly_city, API_KEY)
+            st.write('5일 예보 API 응답:', weekly)
+            if not weekly or 'list' not in weekly:
+                # 에러 정보가 있으면 상세 안내
+                if isinstance(weekly, dict) and weekly.get('error'):
+                    st.error(f"5일 예보 데이터를 가져올 수 없습니다. (status_code: {weekly.get('status_code')})\n메시지: {weekly.get('message')}")
+                else:
+                    st.error(f"5일 예보 데이터를 가져올 수 없습니다. API 응답: {weekly}")
+                return
             desc = desc_map.get(data['weather'][0]['description'], data['weather'][0]['description'])
             emoji = emoji_map.get(desc, '')
             st.markdown(f"<h2 style='text-align:center; color:#1976d2; margin-bottom:0;'>{kor_city}의 현재 날씨 {emoji}</h2>", unsafe_allow_html=True)
