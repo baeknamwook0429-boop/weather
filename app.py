@@ -222,11 +222,13 @@ def main():
         with urllib.request.urlopen('https://ipinfo.io/json') as url:
             info = json.loads(url.read().decode())
             user_city = info.get('city')
+            # IP 기반 도시명이 OpenWeather에서 지원하는 영문 도시명으로 변환
+            user_city_eng = city_map.get(user_city, user_city)
     except Exception:
         user_city = None
+        user_city_eng = None
     if user_city:
-        # 영문 도시명을 한글로 변환
-        kor_user_city = eng_to_kor.get(user_city, user_city)
+        kor_user_city = eng_to_kor.get(user_city_eng, user_city)
         st.info(f'현재 위치: {kor_user_city}')
 
     city = st.text_input('도시명을 입력하세요 (예: 서울, 인천, 대전 등)', user_city if user_city else '서울')
@@ -236,7 +238,6 @@ def main():
         kor_city = eng_to_kor.get(result_city, None)
         if kor_city is None:
             kor_city = next((k for k, v in city_map.items() if v == result_city), result_city)
-        # 인근 도시 안내
         used_near_city = False
         if data is None and result_city != city:
             st.warning(f'입력하신 도시({city})의 날씨 정보가 없어 인근 도시({result_city})로 안내합니다.')
@@ -244,14 +245,17 @@ def main():
             kor_city = eng_to_kor.get(result_city, result_city)
             used_near_city = True
         if data:
-            # 인근 도시 안내 시 5일 예보도 result_city(인근 도시)로 가져옴
             weekly_city = result_city
             weekly = get_weekly_weather(weekly_city, API_KEY)
-            st.write('5일 예보 API 응답:', weekly)
             if not weekly or 'list' not in weekly:
                 # 에러 정보가 있으면 상세 안내
                 if isinstance(weekly, dict) and weekly.get('error'):
-                    st.error(f"5일 예보 데이터를 가져올 수 없습니다. (status_code: {weekly.get('status_code')})\n메시지: {weekly.get('message')}")
+                    code = weekly.get('status_code')
+                    msg = weekly.get('message')
+                    if code == 404:
+                        st.error(f"해당 도시의 5일 예보 데이터를 찾을 수 없습니다. 도시명을 다시 확인하거나 인근 대도시를 입력해 주세요.")
+                    else:
+                        st.error(f"5일 예보 데이터를 가져올 수 없습니다. (status_code: {code})\n메시지: {msg}")
                 else:
                     st.error(f"5일 예보 데이터를 가져올 수 없습니다. API 응답: {weekly}")
                 return
