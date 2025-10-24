@@ -1,12 +1,8 @@
 
 import streamlit as st
 import requests
-from dotenv import load_dotenv
-import os
 
-
-load_dotenv()
-API_KEY = os.getenv('OPENWEATHER_API_KEY')
+API_KEY = st.secrets["OPENWEATHER_API_KEY"]
 
 # 한글-영문 도시명 매핑
 eng_to_kor = {
