@@ -217,7 +217,6 @@ def main():
     # 브라우저 GPS 위치 감지 (Streamlit JS 컴포넌트 활용)
     import streamlit.components.v1 as components
     st.markdown("<b>내 위치(휴대폰/PC)로 날씨 확인:</b>")
-    coords = st.experimental_get_query_params().get('coords', [None])[0]
     if 'coords' not in st.session_state:
         st.session_state['coords'] = None
     get_location = st.button('내 위치 가져오기')
@@ -237,14 +236,10 @@ def main():
         )
         st.info('위치 권한을 허용하면 내 위치 좌표가 자동 입력됩니다.')
     # JS에서 전달된 좌표를 Streamlit에 표시
-    import re
-    if coords:
-        st.session_state['coords'] = coords
     if st.session_state['coords']:
         lat, lon = st.session_state['coords'].split(',')
         st.success(f'내 위치 좌표: {lat}, {lon}')
         # 좌표 기반 날씨 API 호출 (OpenWeather OneCall API 등 활용 가능)
-        # 여기서는 도시명 입력 대신 좌표 기반 날씨를 표시하도록 확장 가능
 
     city = st.text_input('도시명을 입력하세요 (예: 서울, 인천, 대전 등)', '서울')
     search = st.button('검색')
