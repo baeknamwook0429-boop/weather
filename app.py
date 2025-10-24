@@ -207,17 +207,33 @@ def get_weather(city, api_key):
 
 # Streamlit 앱 메인 실행부
 def main():
-    # 위치 좌표 테스트 출력
+    # IP 기반 위치 감지 및 안내
     st.markdown("<hr style='border:0; height:2px; background:#ffe082; margin-bottom:18px;'>", unsafe_allow_html=True)
-    st.subheader('내 위치 좌표 테스트')
-    from streamlit_js_eval import streamlit_js_eval
-    js = streamlit_js_eval(js_expressions="geolocation", key="test_gps")
-    if js and js['geolocation']:
-        lat = js['geolocation']['latitude']
-        lon = js['geolocation']['longitude']
-        st.success(f"현재 위치 좌표: {lat}, {lon}")
-    else:
-        st.warning('위치 정보를 가져올 수 없습니다. 브라우저 권한을 확인하세요.')
+    st.subheader('내 위치(IP 기반) 자동 안내')
+    ip_search = st.button('내 위치 자동 감지')
+    if ip_search:
+        try:
+            ipinfo_url = 'https://ipinfo.io/json'
+            ip_res = requests.get(ipinfo_url)
+            if ip_res.status_code == 200:
+                ip_data = ip_res.json()
+                city = ip_data.get('city', None)
+                region = ip_data.get('region', None)
+                country = ip_data.get('country', None)
+                loc = ip_data.get('loc', None)
+                if city:
+                    st.success(f'내 위치 도시명: {city}')
+                elif region:
+                    st.success(f'내 위치 지역명: {region}')
+                else:
+                    st.info('IP 기반으로 위치를 찾을 수 없습니다.')
+                if loc:
+                    lat, lon = loc.split(',')
+                    st.info(f'좌표: {lat}, {lon}')
+            else:
+                st.error('IP 기반 위치 정보를 가져올 수 없습니다.')
+        except Exception as e:
+            st.error(f'위치 감지 중 오류 발생: {e}')
     st.markdown("""
     <div style='background:linear-gradient(90deg, #1976d2 0%, #64b5f6 100%); padding:32px 0 18px 0; border-radius:0 0 32px 32px; box-shadow:0 2px 12px #90caf9; margin-bottom:24px;'>
         <h1 style='text-align:center; color:#fff; font-size:2.6em; font-weight:700; letter-spacing:2px;'>날씨 정보 웹앱</h1>
