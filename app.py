@@ -207,6 +207,17 @@ def get_weather(city, api_key):
 
 # Streamlit 앱 메인 실행부
 def main():
+    # 위치 좌표 테스트 출력
+    st.markdown("<hr style='border:0; height:2px; background:#ffe082; margin-bottom:18px;'>", unsafe_allow_html=True)
+    st.subheader('내 위치 좌표 테스트')
+    from streamlit_js_eval import streamlit_js_eval
+    js = streamlit_js_eval(js_expressions="geolocation", key="test_gps")
+    if js and js['geolocation']:
+        lat = js['geolocation']['latitude']
+        lon = js['geolocation']['longitude']
+        st.success(f"현재 위치 좌표: {lat}, {lon}")
+    else:
+        st.warning('위치 정보를 가져올 수 없습니다. 브라우저 권한을 확인하세요.')
     st.markdown("""
     <div style='background:linear-gradient(90deg, #1976d2 0%, #64b5f6 100%); padding:32px 0 18px 0; border-radius:0 0 32px 32px; box-shadow:0 2px 12px #90caf9; margin-bottom:24px;'>
         <h1 style='text-align:center; color:#fff; font-size:2.6em; font-weight:700; letter-spacing:2px;'>날씨 정보 웹앱</h1>
