@@ -222,11 +222,13 @@ def main():
         with urllib.request.urlopen('https://ipinfo.io/json') as url:
             info = json.loads(url.read().decode())
             user_city = info.get('city')
-            # IP 기반 도시명이 OpenWeather에서 지원하는 영문 도시명으로 변환
+            # IP 기반 도시명이 한국 주요 도시가 아니면 '서울'로 안내
+            if user_city not in city_map and user_city not in eng_to_kor.values():
+                user_city = '서울'
             user_city_eng = city_map.get(user_city, user_city)
     except Exception:
-        user_city = None
-        user_city_eng = None
+        user_city = '서울'
+        user_city_eng = 'Seoul'
     if user_city:
         kor_user_city = eng_to_kor.get(user_city_eng, user_city)
         st.info(f'현재 위치: {kor_user_city}')
